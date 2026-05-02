@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Jawa Café — Point of Sale</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- QR Code library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════
+   JAWA CAFÉ — BRIGHT POS v4.0
+   Light & Colorful — Full Featured
+═══════════════════════════════════════════════ */
+:root {
+  --ink:      #1A0D2E;
+  --dark:     #F5F0FF;
+  --roast:    #FFFFFF;
+  --bark:     #3D1A6E;
+  --mahog:    #5B21B6;
+  --terra:    #7C3AED;
+  --sienna:   #8B5CF6;
+  --caramel:  #F59E0B;
+  --amber:    #FBBF24;
+  --gold:     #D97706;
+  --champagne:#FDE68A;
+  --cream:    #F5F0FF;
+  --parchment:#FCF7EE;
+
+  /* Bright palette extras */
+  --bg-main:    #F0EBFF;
+  --bg-card:    #FFFFFF;
+  --bg-panel:   #EDE8FF;
+  --accent1:    #7C3AED;
+  --accent2:    #EC4899;
+  --accent3:    #F59E0B;
+  --accent4:    #10B981;
+  --accent5:    #3B82F6;
+  --text-main:  #1A0D2E;
+  --text-muted: #6B5E8A;
+  --text-light: #A190C0;
+  --border:     rgba(124,58,237,0.15);
+  --border-strong: rgba(124,58,237,0.3);
+  --shadow-sm:  0 2px 8px rgba(124,58,237,0.1);
+  --shadow-md:  0 8px 24px rgba(124,58,237,0.15);
+  --shadow-lg:  0 16px 48px rgba(124,58,237,0.2);
+
+  --r-card:18px; --r-btn:14px; --r-pill:40px;
+  --spring: cubic-bezier(0.34,1.56,0.64,1);
+  --ease:   cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{overflow-x:hidden;scroll-behavior:smooth;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg-main);color:var(--text-main);min-height:100vh;overflow-x:hidden;}
+
+/* ── CANVAS BG ── */
+#bg{position:fixed;inset:0;pointer-events:none;z-index:0;}
+
+/* ── FLOATING SHAPES BG ── */
+.grain{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;}
+.grain::before{
+  content:'';position:absolute;width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,58,237,0.12) 0%,transparent 70%);
+  top:-200px;left:-200px;animation:blob1 8s ease-in-out infinite;
+}
+.grain::after{
+  content:'';position:absolute;width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(236,72,153,0.1) 0%,transparent 70%);
+  bottom:-100px;right:-100px;animation:blob2 10s ease-in-out infinite;
+}
+@keyframes blob1{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(80px,40px) scale(1.1)}66%{transform:translate(-40px,80px) scale(0.9)}}
+@keyframes blob2{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-60px,30px) scale(1.05)}66%{transform:translate(40px,-60px) scale(0.95)}}
+.floating-orb{position:fixed;border-radius:50%;pointer-events:none;z-index:1;filter:blur(40px);}
+.orb-1{width:400px;height:400px;background:rgba(124,58,237,0.08);top:10%;right:5%;animation:orbFloat 12s ease-in-out infinite;}
+.orb-2{width:300px;height:300px;background:rgba(245,158,11,0.1);top:50%;left:2%;animation:orbFloat 9s ease-in-out infinite reverse;}
+.orb-3{width:350px;height:350px;background:rgba(236,72,153,0.08);bottom:5%;right:30%;animation:orbFloat 15s ease-in-out infinite 3s;}
+@keyframes orbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.05)}}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:sticky;top:0;z-index:90;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:64px;
+  background:rgba(255,255,255,0.85);
+  backdrop-filter:blur(24px) saturate(200%);
+  border-bottom:2px solid rgba(124,58,237,0.12);
+  box-shadow:0 4px 20px rgba(124,58,237,0.1);
+  animation:tbIn .5s var(--ease) both;
+}
+@keyframes tbIn{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.topbar::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent5),var(--accent1),var(--accent2),var(--accent3),var(--accent4));
+  background-size:300%;animation:rainbow 4s linear infinite;}
+@keyframes rainbow{0%{background-position:0%}100%{background-position:300%}}
+
+.brand{display:flex;align-items:center;gap:12px;cursor:default;}
+.brand-logo{position:relative;width:44px;height:44px;flex-shrink:0;}
+.brand-logo svg{width:100%;height:100%;}
+.brand-logo::after{content:'';position:absolute;inset:-5px;border-radius:50%;
+  border:2px solid rgba(124,58,237,0.3);animation:lp 4s ease-in-out infinite;}
+@keyframes lp{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.12);opacity:0}}
+.brand-name{font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;
+  letter-spacing:.04em;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1;}
+.brand-sub{font-size:9.5px;letter-spacing:.18em;color:var(--text-light);text-transform:uppercase;margin-top:2px;}
+
+/* Center pill */
+.top-center{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;}
+.session-pill{
+  display:flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,rgba(124,58,237,0.08),rgba(236,72,153,0.06));
+  border:1.5px solid rgba(124,58,237,0.2);
+  border-radius:var(--r-pill);padding:7px 18px;
+  font-size:11.5px;color:var(--text-muted);cursor:pointer;
+  transition:all .2s;
+}
+.session-pill:hover{background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(236,72,153,0.1));border-color:rgba(124,58,237,0.4);box-shadow:var(--shadow-sm);}
+.session-pill b{color:var(--accent1);font-weight:700;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#10B981;
+  box-shadow:0 0 10px #10B981;animation:ld 2s ease-in-out infinite;flex-shrink:0;}
+@keyframes ld{0%,100%{opacity:1;box-shadow:0 0 10px #10B981}50%{opacity:.5;box-shadow:0 0 3px #10B981}}
+.pill-sep{color:rgba(124,58,237,0.25);}
+
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.clock{font-family:'Nunito',sans-serif;font-size:20px;font-weight:800;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:.06em;font-variant-numeric:tabular-nums;}
+
+/* ─ Settings button ─ */
+.settings-btn{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(124,58,237,0.08);border:1.5px solid rgba(124,58,237,0.2);
+  border-radius:var(--r-pill);padding:7px 16px;
+  font-size:12px;font-weight:600;color:var(--accent1);
+  cursor:pointer;transition:all .2s;
+}
+.settings-btn:hover{background:rgba(124,58,237,0.15);border-color:rgba(124,58,237,0.4);box-shadow:var(--shadow-sm);}
+.settings-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;}
+
+.kasir-chip{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));
+  color:#fff;border-radius:var(--r-pill);padding:7px 16px;
+  font-size:12px;font-weight:700;letter-spacing:.04em;cursor:pointer;
+  transition:all .2s;box-shadow:0 4px 14px rgba(124,58,237,0.3);
+}
+.kasir-chip:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(124,58,237,0.45);}
+.kasir-chip::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);
+  animation:cs 3s ease-in-out infinite;}
+@keyframes cs{0%{left:-100%}100%{left:250%}}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:1fr 385px;min-height:calc(100vh - 64px);position:relative;z-index:2;}
+
+/* ── LEFT PANEL ── */
+.panel-left{padding:26px 22px 28px 26px;overflow-y:auto;animation:plIn .6s var(--ease) .1s both;}
+@keyframes plIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:translateX(0)}}
+.panel-left::-webkit-scrollbar{width:4px;}
+.panel-left::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.2);border-radius:4px;}
+
+/* ─ Customer Bar ─ */
+.customer-bar{
+  display:flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,rgba(124,58,237,0.06),rgba(236,72,153,0.04));
+  border:1.5px solid rgba(124,58,237,0.15);
+  border-radius:14px;padding:12px 18px;margin-bottom:22px;
+  cursor:pointer;transition:all .25s;box-shadow:var(--shadow-sm);
+}
+.customer-bar:hover{background:linear-gradient(135deg,rgba(124,58,237,0.12),rgba(236,72,153,0.08));border-color:rgba(124,58,237,0.3);box-shadow:var(--shadow-md);}
+.cb-icon{font-size:20px;flex-shrink:0;}
+.cb-info{flex:1;min-width:0;}
+.cb-label{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-light);font-weight:700;}
+.cb-value{font-size:13.5px;font-weight:600;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.cb-edit{font-size:11px;color:var(--accent1);font-weight:600;white-space:nowrap;flex-shrink:0;background:rgba(124,58,237,0.1);padding:4px 10px;border-radius:20px;}
+
+/* ─ Search ─ */
+.search-section{margin-bottom:22px;}
+.search-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.section-heading{font-family:'Nunito',sans-serif;font-size:28px;font-weight:900;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  flex:1;}
+.badge-count{font-size:11px;font-weight:700;letter-spacing:.08em;color:#fff;
+  background:linear-gradient(135deg,var(--accent3),#F97316);
+  border-radius:var(--r-pill);padding:5px 14px;text-transform:uppercase;
+  box-shadow:0 3px 10px rgba(245,158,11,0.35);}
+.search-wrap{position:relative;}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.5;pointer-events:none;}
+.search-input{width:100%;padding:12px 15px 12px 40px;
+  background:#fff;border:2px solid rgba(124,58,237,0.15);
+  border-radius:14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13.5px;
+  color:var(--text-main);outline:none;transition:all .22s var(--ease);
+  box-shadow:var(--shadow-sm);}
+.search-input::placeholder{color:var(--text-light);}
+.search-input:focus{border-color:rgba(124,58,237,0.45);
+  box-shadow:0 0 0 4px rgba(124,58,237,0.1),var(--shadow-sm);}
+
+/* ─ Tabs ─ */
+.tabs-wrap{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;margin-bottom:22px;scrollbar-width:none;}
+.tabs-wrap::-webkit-scrollbar{display:none;}
+.tab-btn{display:flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--r-pill);
+  font-size:12.5px;font-weight:600;letter-spacing:.02em;
+  border:2px solid rgba(124,58,237,0.15);background:#fff;
+  color:var(--text-muted);cursor:pointer;transition:all .2s var(--ease);
+  white-space:nowrap;flex-shrink:0;position:relative;overflow:hidden;
+  box-shadow:var(--shadow-sm);}
+.tab-btn:hover{border-color:rgba(124,58,237,0.35);color:var(--accent1);transform:translateY(-2px);box-shadow:var(--shadow-md);}
+.tab-btn.active{background:linear-gradient(135deg,var(--accent1),var(--accent2));
+  border-color:transparent;color:#fff;font-weight:700;
+  box-shadow:0 6px 20px rgba(124,58,237,0.35);transform:translateY(-2px);}
+.tab-btn.active::after{display:none;}
+.tab-cnt{font-size:10px;background:rgba(255,255,255,.22);border-radius:10px;padding:1px 7px;}
+.tab-btn:not(.active) .tab-cnt{background:rgba(124,58,237,0.1);color:var(--accent1);}
+
+/* ─ Menu Grid ─ */
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;}
+
+/* ─ Menu Card ─ */
+.menu-card{
+  position:relative;background:#fff;
+  border:2px solid rgba(124,58,237,0.08);border-radius:var(--r-card);
+  padding:18px 15px 15px;cursor:pointer;overflow:hidden;
+  transition:transform .28s var(--spring),box-shadow .28s var(--ease),border-color .22s;
+  animation:ci .4s var(--ease) both;will-change:transform;
+  -webkit-tap-highlight-color:transparent;
+  box-shadow:var(--shadow-sm);
+}
+@keyframes ci{from{opacity:0;transform:scale(.93) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.menu-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent5),var(--accent1),var(--accent2),var(--accent3));
+  opacity:0;transition:opacity .22s;background-size:200%;animation:rainbow 3s linear infinite;}
+.menu-card::after{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at var(--hx,50%) var(--hy,30%),rgba(124,58,237,0.07) 0%,transparent 70%);
+  opacity:0;transition:opacity .28s;pointer-events:none;}
+.menu-card:hover{transform:translateY(-6px) scale(1.016);border-color:rgba(124,58,237,0.25);
+  box-shadow:0 16px 40px rgba(124,58,237,0.18),0 4px 12px rgba(124,58,237,0.1);}
+.menu-card:hover::before{opacity:1;}.menu-card:hover::after{opacity:1;}
+.menu-card:active{transform:translateY(-3px) scale(.998);}
+
+.card-stock{position:absolute;top:11px;right:11px;font-size:9px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:var(--r-pill);pointer-events:none;}
+.card-stock.best{background:rgba(245,158,11,0.12);color:#D97706;border:1.5px solid rgba(245,158,11,0.3);}
+.card-stock.new{background:rgba(16,185,129,0.1);color:#059669;border:1.5px solid rgba(16,185,129,0.25);}
+.card-stock.hot{background:rgba(236,72,153,0.1);color:#DB2777;border:1.5px solid rgba(236,72,153,0.25);}
+
+.card-qty-badge{position:absolute;top:-1px;left:13px;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;
+  font-size:10px;font-weight:800;border-radius:0 0 10px 10px;padding:3px 10px;
+  transform:translateY(-100%);opacity:0;transition:transform .28s var(--spring),opacity .22s;
+  pointer-events:none;box-shadow:0 4px 12px rgba(124,58,237,0.35);}
+.menu-card[data-qty] .card-qty-badge{transform:translateY(0);opacity:1;}
+
+.card-emoji-wrap{position:relative;width:54px;height:54px;margin-bottom:12px;
+  display:flex;align-items:center;justify-content:center;}
+.card-emoji-bg{position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(124,58,237,0.1),rgba(245,158,11,0.1));
+  border-radius:14px;transition:all .28s;}
+.menu-card:hover .card-emoji-bg{background:linear-gradient(135deg,rgba(124,58,237,0.18),rgba(236,72,153,0.12));transform:rotate(8deg) scale(1.08);}
+.card-emoji{font-size:29px;line-height:1;position:relative;z-index:1;
+  transition:transform .32s var(--spring);}
+.menu-card:hover .card-emoji{transform:scale(1.22) rotate(-10deg) translateY(-2px);}
+
+.card-cat{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent2);margin-bottom:4px;}
+.card-name{font-size:14px;font-weight:700;color:var(--text-main);margin-bottom:4px;line-height:1.25;}
+.card-desc{font-size:11.5px;font-weight:400;color:var(--text-muted);margin-bottom:14px;line-height:1.5;min-height:32px;}
+.card-footer{display:flex;justify-content:space-between;align-items:center;}
+.card-price{font-family:'Nunito',sans-serif;font-size:17px;font-weight:800;
+  background:linear-gradient(135deg,var(--accent3),#F97316);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.card-price-sub{font-family:'Plus Jakarta Sans',sans-serif;font-size:9.5px;color:var(--text-light);display:block;margin-top:1px;}
+.add-btn{width:34px;height:34px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;
+  font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all .25s var(--spring);position:relative;overflow:hidden;
+  box-shadow:0 4px 12px rgba(124,58,237,0.35);flex-shrink:0;}
+.add-btn::after{content:'';position:absolute;inset:0;
+  background:radial-gradient(circle,rgba(255,255,255,.35) 0%,transparent 70%);opacity:0;transition:opacity .2s;}
+.add-btn:hover{transform:scale(1.22) rotate(90deg);box-shadow:0 6px 20px rgba(124,58,237,0.5);}
+.add-btn:hover::after{opacity:1;}.add-btn:active{transform:scale(.88) rotate(90deg);}
+
+/* ── RIGHT PANEL ── */
+.panel-right{display:flex;flex-direction:column;background:linear-gradient(180deg,#EDE8FF 0%,#F5F0FF 100%);
+  border-left:2px solid rgba(124,58,237,0.12);position:sticky;top:64px;
+  height:calc(100vh - 64px);animation:prIn .6s var(--ease) .18s both;overflow:hidden;}
+@keyframes prIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+.panel-right::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,0.12) 0%,transparent 70%);
+  pointer-events:none;z-index:0;}
+
+/* ─ Cart Header ─ */
+.cart-hd{padding:20px 22px 16px;border-bottom:2px solid rgba(124,58,237,0.1);
+  position:relative;z-index:1;flex-shrink:0;background:rgba(255,255,255,0.6);backdrop-filter:blur(10px);}
+.cart-hd::after{content:'';position:absolute;bottom:-2px;left:22px;right:22px;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(124,58,237,0.3),rgba(236,72,153,0.3),transparent);}
+.cart-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.cart-title{font-family:'Nunito',sans-serif;font-size:20px;font-weight:900;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.cart-badge{background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;
+  font-size:11px;font-weight:800;border-radius:var(--r-pill);padding:4px 13px;
+  transition:transform .28s var(--spring);box-shadow:0 3px 10px rgba(124,58,237,0.3);}
+.cart-badge.pop{animation:bp .32s var(--spring);}
+@keyframes bp{0%{transform:scale(1)}50%{transform:scale(1.38)}100%{transform:scale(1)}}
+.cart-meta{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-muted);}
+.meta-dot{width:6px;height:6px;border-radius:50%;background:#10B981;box-shadow:0 0 8px #10B981;
+  animation:ld 2s ease-in-out infinite;flex-shrink:0;}
+.ms{color:rgba(124,58,237,0.2);}
+
+/* ─ Session info strip ─ */
+.session-strip{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  padding:10px 22px;border-bottom:1.5px solid rgba(124,58,237,0.08);
+  background:rgba(255,255,255,0.4);flex-shrink:0;
+}
+.ss-item{display:flex;flex-direction:column;gap:2px;}
+.ss-label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-light);font-weight:700;}
+.ss-value{font-size:12.5px;font-weight:600;color:var(--accent1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ─ Cart notes ─ */
+.cart-notes-row{padding:9px 22px;border-bottom:1.5px solid rgba(124,58,237,0.07);flex-shrink:0;}
+.notes-field{width:100%;background:rgba(255,255,255,0.8);border:1.5px solid rgba(124,58,237,0.15);
+  border-radius:11px;padding:8px 12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;
+  color:var(--text-main);resize:none;outline:none;transition:all .2s;
+  font-weight:400;line-height:1.45;}
+.notes-field::placeholder{color:var(--text-light);}
+.notes-field:focus{border-color:rgba(124,58,237,0.4);background:#fff;box-shadow:0 0 0 3px rgba(124,58,237,0.08);}
+
+/* ─ Cart Body ─ */
+.cart-body{flex:1;overflow-y:auto;padding:14px 22px;
+  scrollbar-width:thin;scrollbar-color:rgba(124,58,237,0.15) transparent;position:relative;z-index:1;}
+.cart-body::-webkit-scrollbar{width:3px;}
+.cart-body::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.2);border-radius:3px;}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 16px;gap:12px;}
+.empty-cup{position:relative;font-size:52px;animation:ecf 4s ease-in-out infinite;}
+@keyframes ecf{0%,100%{transform:translateY(0) rotate(-3deg)}33%{transform:translateY(-9px) rotate(3deg)}66%{transform:translateY(-4px) rotate(-2deg)}}
+.empty-steam{position:absolute;bottom:100%;left:50%;display:flex;gap:6px;transform:translateX(-50%);}
+.steam-puff{width:3px;border-radius:3px;background:rgba(124,58,237,0.25);animation:sr 2s ease-out infinite;}
+.steam-puff:nth-child(1){height:15px;animation-delay:0s;}
+.steam-puff:nth-child(2){height:20px;animation-delay:.4s;}
+.steam-puff:nth-child(3){height:13px;animation-delay:.8s;}
+@keyframes sr{0%{opacity:0;transform:translateY(0) scaleX(1)}30%{opacity:.9}100%{opacity:0;transform:translateY(-22px) scaleX(1.5)}}
+.empty-title{font-family:'Nunito',sans-serif;font-size:16px;font-weight:800;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.empty-sub{font-size:12px;font-weight:400;color:var(--text-muted);text-align:center;line-height:1.6;}
+
+.cart-item{display:flex;align-items:center;gap:10px;padding:11px 0;
+  border-bottom:1.5px solid rgba(124,58,237,0.07);animation:iin .28s var(--spring);}
+@keyframes iin{from{opacity:0;transform:translateX(10px) scale(.96)}to{opacity:1;transform:translateX(0) scale(1)}}
+.item-thumb{width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(124,58,237,0.1),rgba(245,158,11,0.1));
+  border:1.5px solid rgba(124,58,237,0.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.item-det{flex:1;min-width:0;}
+.item-name{font-size:12.5px;font-weight:700;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;}
+.item-up{font-size:10.5px;font-weight:400;color:var(--text-muted);}
+.item-qc{display:flex;align-items:center;gap:5px;}
+.qb{width:24px;height:24px;border-radius:8px;
+  background:rgba(124,58,237,0.08);
+  border:1.5px solid rgba(124,58,237,0.18);color:var(--accent1);font-size:15px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .16s;flex-shrink:0;}
+.qb:hover{background:rgba(124,58,237,0.18);transform:scale(1.12);}
+.qb:active{transform:scale(.87);}
+.qn{font-size:13px;font-weight:800;color:var(--accent1);min-width:16px;text-align:center;}
+.item-tot{font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;
+  background:linear-gradient(135deg,var(--accent3),#F97316);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  min-width:65px;text-align:right;}
+
+/* ─ Cart Footer ─ */
+.cart-ft{padding:13px 20px 18px;border-top:1.5px solid rgba(124,58,237,0.1);position:relative;z-index:1;flex-shrink:0;}
+.cart-ft::before{content:'';display:block;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(124,58,237,0.2),rgba(236,72,153,0.15),transparent);margin-bottom:13px;}
+.sum-line{display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);padding:3.5px 0;}
+.sum-line.disc{color:#059669;font-weight:600;}
+.sum-total{display:flex;justify-content:space-between;align-items:center;
+  padding:11px 0 13px;border-top:1.5px solid rgba(124,58,237,0.1);margin-top:5px;}
+.sum-total-lbl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);}
+.sum-total-amt{font-family:'Nunito',sans-serif;font-size:23px;font-weight:900;
+  background:linear-gradient(135deg,var(--accent3),#F97316);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  transition:all .25s var(--ease);}
+.pay-btn{width:100%;padding:14px;border-radius:var(--r-btn);border:none;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));
+  color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13.5px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;
+  transition:all .22s var(--ease);box-shadow:0 7px 22px rgba(124,58,237,0.35);}
+.pay-btn::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.15) 0%,transparent 60%);border-radius:inherit;}
+.pay-btn::after{content:'';position:absolute;top:0;left:-120%;width:80%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);}
+.pay-btn:not(:disabled):hover::after{animation:ps .65s ease forwards;}
+@keyframes ps{0%{left:-120%}100%{left:150%}}
+.pay-btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(124,58,237,0.5);}
+.pay-btn:disabled{background:rgba(124,58,237,0.08);color:rgba(124,58,237,0.25);cursor:not-allowed;box-shadow:none;}
+.clear-btn{width:100%;padding:9px;border-radius:11px;border:1.5px solid rgba(124,58,237,0.15);
+  background:transparent;color:var(--text-light);font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:12px;cursor:pointer;margin-top:7px;transition:all .18s;}
+.clear-btn:not(:disabled):hover{color:var(--accent1);border-color:rgba(124,58,237,0.3);background:rgba(124,58,237,0.05);}
+.clear-btn:disabled{opacity:.3;cursor:not-allowed;}
+
+/* ── MODALS SHARED ── */
+.overlay{position:fixed;inset:0;background:rgba(26,13,46,.55);backdrop-filter:blur(14px);
+  z-index:200;display:flex;align-items:center;justify-content:center;padding:18px;
+  opacity:0;pointer-events:none;transition:opacity .28s;}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{background:linear-gradient(145deg,#FFFFFF,#F5F0FF);border:1.5px solid rgba(124,58,237,0.18);
+  border-radius:22px;max-width:100%;max-height:92vh;overflow-y:auto;position:relative;
+  transform:scale(.94) translateY(18px);transition:transform .32s var(--spring);
+  box-shadow:0 28px 72px rgba(124,58,237,0.22),inset 0 1px 0 rgba(255,255,255,0.9);}
+.overlay.open .modal{transform:scale(1) translateY(0);}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:22px 22px 0 0;
+  background:linear-gradient(90deg,var(--accent5),var(--accent1),var(--accent2),var(--accent3),var(--accent4));
+  background-size:300%;animation:mg 3s linear infinite;}
+@keyframes mg{0%{background-position:0%}100%{background-position:300%}}
+.modal-p{padding:26px;}
+.modal-title{font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:3px;}
+.modal-sub{font-size:12px;font-weight:400;color:var(--text-muted);margin-bottom:20px;}
+.modal-hr{height:1px;background:linear-gradient(90deg,transparent,rgba(124,58,237,0.2),transparent);margin:18px 0;}
+
+/* ── SETTINGS MODAL ── */
+#settingsModal{width:500px;}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:4px;}
+.settings-grid.full{grid-template-columns:1fr;}
+.field-group{display:flex;flex-direction:column;gap:6px;}
+.field-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);}
+.field-input,.field-select{width:100%;padding:11px 13px;
+  background:#fff;border:1.5px solid rgba(124,58,237,0.18);
+  border-radius:11px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;
+  color:var(--text-main);outline:none;transition:all .2s;appearance:none;}
+.field-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237C3AED' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;cursor:pointer;}
+.field-select option{background:#fff;color:var(--text-main);}
+.field-input::placeholder{color:var(--text-light);}
+.field-input:focus,.field-select:focus{border-color:rgba(124,58,237,0.45);background:#fff;box-shadow:0 0 0 3px rgba(124,58,237,0.08);}
+
+/* QR section inside settings */
+.qr-section{
+  margin-top:4px;padding:18px;
+  background:rgba(124,58,237,0.04);border:1.5px solid rgba(124,58,237,0.12);
+  border-radius:14px;
+}
+.qr-section-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text-muted);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.qr-section-title::before,.qr-section-title::after{content:'';flex:1;height:1px;background:rgba(124,58,237,0.15);}
+.qr-layout{display:flex;gap:18px;align-items:flex-start;}
+.qr-box{
+  flex-shrink:0;width:110px;height:110px;
+  background:#fff;border-radius:10px;padding:6px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-md);
+  position:relative;overflow:hidden;
+}
+.qr-box::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(124,58,237,0.04),transparent);pointer-events:none;}
+.qr-box canvas,.qr-box img{width:98px!important;height:98px!important;}
+.qr-info{flex:1;}
+.qr-url-display{font-size:11px;font-weight:400;color:var(--text-muted);
+  word-break:break-all;line-height:1.5;margin-bottom:10px;
+  background:#fff;border:1.5px solid rgba(124,58,237,0.12);
+  border-radius:8px;padding:8px 10px;}
+.qr-url-input{width:100%;padding:9px 11px;margin-bottom:8px;
+  background:#fff;border:1.5px solid rgba(124,58,237,0.18);
+  border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;
+  color:var(--text-main);outline:none;transition:all .2s;}
+.qr-url-input::placeholder{color:var(--text-light);}
+.qr-url-input:focus{border-color:rgba(124,58,237,0.45);background:#fff;box-shadow:0 0 0 3px rgba(124,58,237,0.08);}
+.qr-hint{font-size:10px;color:var(--text-light);line-height:1.5;}
+.qr-actions{display:flex;gap:8px;margin-top:10px;}
+.qr-btn-dl{padding:7px 14px;border-radius:9px;border:none;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));
+  color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .18s;box-shadow:0 3px 10px rgba(124,58,237,0.3);}
+.qr-btn-dl:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(124,58,237,0.4);}
+.qr-btn-copy{padding:7px 14px;border-radius:9px;
+  border:1.5px solid rgba(124,58,237,0.2);background:#fff;
+  color:var(--accent1);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .18s;}
+.qr-btn-copy:hover{background:rgba(124,58,237,0.08);border-color:rgba(124,58,237,0.4);}
+
+.modal-btns{display:flex;gap:9px;margin-top:20px;}
+.mbtn{flex:1;padding:12px;border-radius:11px;font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.03em;}
+.mbtn.ghost{background:rgba(124,58,237,0.06);border:1.5px solid rgba(124,58,237,0.15);color:var(--text-muted);}
+.mbtn.ghost:hover{background:rgba(124,58,237,0.12);color:var(--accent1);border-color:rgba(124,58,237,0.3);}
+.mbtn.primary{background:linear-gradient(135deg,var(--accent1),var(--accent2));border:none;color:#fff;
+  box-shadow:0 4px 14px rgba(124,58,237,0.3);}
+.mbtn.primary:hover{transform:translateY(-1px);box-shadow:0 7px 20px rgba(124,58,237,0.45);}
+.mbtn.success{background:linear-gradient(135deg,#059669,#10b981);border:none;color:white;
+  box-shadow:0 4px 14px rgba(5,150,105,.28);}
+.mbtn.success:hover{transform:translateY(-1px);box-shadow:0 7px 20px rgba(5,150,105,.38);}
+
+/* ── PAYMENT MODAL ── */
+#payModal{width:430px;}
+.receipt{background:#FFFDF5;border:1.5px solid rgba(124,58,237,0.1);border-radius:12px;padding:18px;margin-bottom:18px;
+  color:var(--text-main);font-size:12px;position:relative;overflow:hidden;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.9);}
+.receipt::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:repeating-linear-gradient(90deg,var(--accent1) 0%,var(--accent1) 4px,transparent 4px,transparent 8px);opacity:.25;}
+.r-logo{text-align:center;padding-bottom:13px;border-bottom:1px dashed rgba(124,58,237,0.2);margin-bottom:12px;}
+.r-name{font-family:'Nunito',sans-serif;font-size:18px;font-weight:800;font-style:italic;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.r-addr{font-size:10px;color:var(--text-muted);margin-top:2px;}
+.r-row{display:flex;justify-content:space-between;padding:2px 0;color:var(--text-main);}
+.r-div{border:none;border-top:1px dashed rgba(124,58,237,0.18);margin:8px 0;}
+.r-total{display:flex;justify-content:space-between;font-weight:800;font-size:13.5px;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;padding-top:4px;}
+.r-customer{font-size:11px;color:var(--text-muted);margin-top:4px;padding-top:8px;border-top:1px dashed rgba(124,58,237,0.15);}
+.r-thanks{text-align:center;margin-top:11px;font-size:11px;color:var(--text-light);font-style:italic;}
+.pay-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;display:block;}
+.pay-field{width:100%;padding:13px 15px;background:#fff;
+  border:1.5px solid rgba(124,58,237,0.18);border-radius:11px;
+  font-family:'Nunito',sans-serif;font-size:22px;font-weight:700;color:var(--text-main);
+  outline:none;margin-bottom:13px;transition:all .2s;}
+.pay-field:focus{border-color:rgba(124,58,237,0.45);box-shadow:0 0 0 4px rgba(124,58,237,0.08);}
+.pay-field::placeholder{color:var(--text-light);font-size:15px;}
+.kembalian-box{display:flex;justify-content:space-between;align-items:center;
+  background:rgba(16,185,129,0.06);border:1.5px solid rgba(16,185,129,0.25);border-radius:11px;
+  padding:12px 15px;margin-bottom:13px;animation:iin .22s var(--ease);}
+.kb-lbl{font-size:13px;font-weight:600;color:#059669;}
+.kb-amt{font-family:'Nunito',sans-serif;font-size:20px;font-weight:800;color:#059669;}
+.error-msg{background:rgba(239,68,68,0.05);border:1.5px solid rgba(239,68,68,0.2);border-radius:11px;
+  padding:10px 14px;margin-bottom:13px;font-size:12px;color:#dc2626;animation:shake .28s ease;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.success-sec{text-align:center;padding:8px 0 18px;}
+.success-icon{font-size:52px;margin-bottom:13px;display:block;animation:spi .55s var(--spring);}
+@keyframes spi{0%{transform:scale(0) rotate(-18deg);opacity:0}70%{transform:scale(1.12) rotate(4deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+.success-title{font-family:'Nunito',sans-serif;font-size:23px;font-weight:900;
+  background:linear-gradient(135deg,#059669,#10b981);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:5px;}
+.success-change{font-size:13px;color:var(--text-muted);}
+
+/* ── CUSTOMER ORDER MODAL ── */
+#customerModal{width:420px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:#fff;border:1.5px solid rgba(124,58,237,0.2);color:var(--accent1);
+  padding:10px 20px;border-radius:var(--r-pill);font-size:13px;font-weight:600;
+  box-shadow:var(--shadow-lg);z-index:500;pointer-events:none;
+  transition:transform .36s var(--spring);white-space:nowrap;max-width:90vw;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ── MOBILE FAB ── */
+.fab{display:none;position:fixed;bottom:22px;right:18px;z-index:80;
+  align-items:center;justify-content:center;flex-direction:column;gap:2px;
+  width:60px;height:60px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));
+  box-shadow:0 7px 24px rgba(124,58,237,0.45),0 0 0 0 rgba(124,58,237,0.25);
+  cursor:pointer;animation:fabp 3s ease-in-out infinite;
+  -webkit-tap-highlight-color:transparent;}
+@keyframes fabp{0%,100%{box-shadow:0 7px 24px rgba(124,58,237,0.45),0 0 0 0 rgba(124,58,237,0.25)}50%{box-shadow:0 7px 24px rgba(124,58,237,0.45),0 0 0 9px rgba(124,58,237,0)}}
+.fab-icon{font-size:23px;line-height:1;}
+.fab-cnt{font-family:'Plus Jakarta Sans',sans-serif;font-size:9.5px;font-weight:700;color:#fff;line-height:1;}
+.fab:active{transform:scale(.92);}
+
+/* ── SHEET ── */
+.sheet-overlay{display:none;position:fixed;inset:0;background:rgba(26,13,46,.45);
+  backdrop-filter:blur(4px);z-index:120;opacity:0;pointer-events:none;transition:opacity .28s;}
+.sheet-overlay.open{opacity:1;pointer-events:all;}
+.mobile-sheet{display:none;position:fixed;bottom:0;left:0;right:0;background:linear-gradient(180deg,#FFFFFF,#F0EBFF);
+  border:1.5px solid rgba(124,58,237,0.15);border-bottom:none;border-radius:22px 22px 0 0;
+  z-index:130;flex-direction:column;max-height:84vh;
+  transform:translateY(100%);transition:transform .38s var(--spring);
+  box-shadow:0 -10px 44px rgba(124,58,237,0.2);
+  padding-bottom:env(safe-area-inset-bottom,0px);}
+.mobile-sheet.open{transform:translateY(0);}
+.sheet-handle{width:42px;height:4px;background:rgba(124,58,237,0.2);border-radius:2px;margin:12px auto 0;flex-shrink:0;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:960px){
+  .layout{grid-template-columns:1fr;}
+  .panel-right{display:none;}
+  .fab{display:flex;}
+  .sheet-overlay{display:block;}
+  .mobile-sheet{display:flex;}
+  .panel-left{padding:18px 14px;padding-bottom:96px;}
+  .menu-grid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;}
+  .top-center{display:none;}
+  .topbar{padding:0 16px;}
+  .brand-name{font-size:18px;}
+  .brand-sub{display:none;}
+  #settingsModal{width:100%;}
+}
+@media(max-width:540px){
+  .settings-grid{grid-template-columns:1fr;}
+  .menu-grid{grid-template-columns:repeat(2,1fr);gap:9px;}
+  .card-emoji{font-size:24px;}
+  .qr-layout{flex-direction:column;align-items:center;}
+  .topbar-right .clock{display:none;}
+}
+@media(max-width:380px){
+  .topbar{padding:0 12px;}
+  .brand-name{font-size:16px;}
+  .kasir-chip{display:none;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+<div class="grain"></div>
+
+<!-- ══════════════════ TOPBAR ══════════════════ -->
+<header class="topbar">
+
+  <div class="brand" onclick="openSettings()">
+    <div class="brand-logo">
+      <svg viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="21" cy="21" r="20" stroke="#7C3AED" stroke-width="1"/>
+        <circle cx="21" cy="21" r="14" stroke="#7C3AED" stroke-width=".5" stroke-dasharray="2 3"/>
+        <text x="21" y="26" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#7C3AED">JC</text>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">Jawa Café</div>
+      <div class="brand-sub">Est. 2019 · Jakarta Pusat</div>
+    </div>
+  </div>
+
+  <div class="top-center">
+    <div class="session-pill" onclick="openSettings()">
+      <span class="live-dot"></span>
+      Meja <b id="pillTable">01</b>
+      <span class="pill-sep">·</span>
+      Kasir: <b id="pillKasir">Adit</b>
+      <span class="pill-sep">·</span>
+      <b id="pillCustomer">Tamu</b>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="clock" id="clock">00:00:00</div>
+    <button class="settings-btn" onclick="openSettings()">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Pengaturan
+    </button>
+    <div class="kasir-chip" onclick="openSettings()" id="kasirChip">☕ Adit</div>
+  </div>
+</header>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="layout">
+
+  <!-- LEFT PANEL -->
+  <section class="panel-left">
+
+    <!-- Customer info bar -->
+    <div class="customer-bar" onclick="openCustomer()">
+      <span class="cb-icon">👤</span>
+      <div class="cb-info">
+        <div class="cb-label">Pemesan</div>
+        <div class="cb-value" id="cbCustomerName">Belum diisi — klik untuk tambahkan</div>
+      </div>
+      <div class="cb-info" style="max-width:100px;">
+        <div class="cb-label">No. HP</div>
+        <div class="cb-value" id="cbPhone">—</div>
+      </div>
+      <div class="cb-edit">✏️ Edit</div>
+    </div>
+
+    <div class="search-section">
+      <div class="search-row">
+        <h1 class="section-heading">Menu Hari Ini</h1>
+        <span class="badge-count" id="menuCount">34 item</span>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" id="searchInput"
+          placeholder="Cari menu, minuman, makanan…" oninput="onSearch()" autocomplete="off"/>
+      </div>
+    </div>
+
+    <div class="tabs-wrap" id="tabsWrap"></div>
+    <div class="menu-grid" id="menuGrid"></div>
+  </section>
+
+  <!-- RIGHT PANEL (Desktop) -->
+  <aside class="panel-right" id="desktopCart">
+    <div class="cart-hd">
+      <div class="cart-title-row">
+        <h2 class="cart-title">Pesanan</h2>
+        <span class="cart-badge" id="cartBadgeD">0 item</span>
+      </div>
+      <div class="cart-meta">
+        <span class="meta-dot"></span>
+        <span id="orderNumD">Order #—</span>
+        <span class="ms">·</span>
+        <span id="cartTimeD">—</span>
+      </div>
+    </div>
+
+    <!-- Session strip -->
+    <div class="session-strip">
+      <div class="ss-item">
+        <div class="ss-label">Kasir</div>
+        <div class="ss-value" id="stripKasir">Adit</div>
+      </div>
+      <div class="ss-item">
+        <div class="ss-label">Meja</div>
+        <div class="ss-value" id="stripTable">#01</div>
+      </div>
+      <div class="ss-item" style="grid-column:1/-1;">
+        <div class="ss-label">Pemesan</div>
+        <div class="ss-value" id="stripCustomer">—</div>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="cart-notes-row">
+      <textarea class="notes-field" id="orderNotes" rows="2"
+        placeholder="✍️ Catatan pesanan (tanpa gula, extra hot, dll…)"
+        oninput="syncNotes()"></textarea>
+    </div>
+
+    <div class="cart-body" id="cartBodyD">
+      <div class="empty-state">
+        <div class="empty-cup">☕<div class="empty-steam"><div class="steam-puff"></div><div class="steam-puff"></div><div class="steam-puff"></div></div></div>
+        <div class="empty-title">Belum ada pesanan</div>
+        <div class="empty-sub">Pilih menu dari kiri<br>untuk mulai transaksi</div>
+      </div>
+    </div>
+
+    <div class="cart-ft">
+      <div class="sum-line"><span>Subtotal</span><span id="subD">Rp 0</span></div>
+      <div class="sum-line"><span>Pajak (11%)</span><span id="taxD">Rp 0</span></div>
+      <div class="sum-line disc"><span>🎁 Diskon Member</span><span id="discD">Rp 0</span></div>
+      <div class="sum-total">
+        <span class="sum-total-lbl">Total</span>
+        <span class="sum-total-amt" id="totalD">Rp 0</span>
+      </div>
+      <button class="pay-btn" id="payBtnD" disabled onclick="openPay()">✦ Proses Pembayaran</button>
+      <button class="clear-btn" id="clearBtnD" disabled onclick="clearCart()">Kosongkan Pesanan</button>
+    </div>
+  </aside>
+</main>
+
+<!-- ══ MOBILE FAB ══ -->
+<button class="fab" id="fab" onclick="toggleSheet()">
+  <span class="fab-icon">🛒</span>
+  <span class="fab-cnt" id="fabCnt">0</span>
+</button>
+
+<!-- ══ MOBILE SHEET ══ -->
+<div class="sheet-overlay" id="sheetOvl" onclick="toggleSheet()"></div>
+<div class="mobile-sheet" id="mobileSheet">
+  <div class="sheet-handle"></div>
+  <div class="cart-hd">
+    <div class="cart-title-row">
+      <h2 class="cart-title">Pesanan</h2>
+      <span class="cart-badge" id="cartBadgeM">0 item</span>
+    </div>
+    <div class="cart-meta">
+      <span class="meta-dot"></span>
+      <span id="orderNumM">Order #—</span>
+      <span class="ms">·</span>
+      <span id="stripKasirM">Adit</span>
+      <span class="ms">·</span>
+      Meja <span id="stripTableM">#01</span>
+    </div>
+  </div>
+  <div class="cart-notes-row">
+    <textarea class="notes-field" id="orderNotesM" rows="2"
+      placeholder="✍️ Catatan pesanan…" oninput="syncNotesM()"></textarea>
+  </div>
+  <div class="cart-body" id="cartBodyM" style="max-height:38vh;">
+    <div class="empty-state">
+      <div class="empty-cup">☕</div>
+      <div class="empty-title">Belum ada pesanan</div>
+    </div>
+  </div>
+  <div class="cart-ft">
+    <div class="sum-line"><span>Subtotal</span><span id="subM">Rp 0</span></div>
+    <div class="sum-line"><span>Pajak (11%)</span><span id="taxM">Rp 0</span></div>
+    <div class="sum-total">
+      <span class="sum-total-lbl">Total</span>
+      <span class="sum-total-amt" id="totalM">Rp 0</span>
+    </div>
+    <button class="pay-btn" id="payBtnM" disabled onclick="openPay()">✦ Proses Pembayaran</button>
+    <button class="clear-btn" id="clearBtnM" disabled onclick="clearCart()">Kosongkan</button>
+  </div>
+</div>
+
+<!-- ══════ SETTINGS MODAL ══════ -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal" id="settingsModal">
+    <div class="modal-p">
+      <div class="modal-title">⚙️ Pengaturan Sesi</div>
+      <div class="modal-sub">Konfigurasi detail kasir, meja, dan QR menu</div>
+
+      <div class="settings-grid">
+        <div class="field-group">
+          <label class="field-label">Nama Kasir</label>
+          <input class="field-input" type="text" id="setKasir" placeholder="Contoh: Adit" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Nomor Meja</label>
+          <input class="field-input" type="text" id="setTable" placeholder="Contoh: 01" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Nama Restoran</label>
+          <input class="field-input" type="text" id="setRestoran" placeholder="Jawa Café" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Alamat</label>
+          <input class="field-input" type="text" id="setAlamat" placeholder="Jl. Merdeka No. 12" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Shift Kerja</label>
+          <select class="field-select" id="setShift">
+            <option value="Pagi (07.00–14.00)">Pagi (07.00–14.00)</option>
+            <option value="Siang (14.00–21.00)">Siang (14.00–21.00)</option>
+            <option value="Malam (21.00–02.00)">Malam (21.00–02.00)</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Mode Diskon</label>
+          <select class="field-select" id="setDiskon">
+            <option value="member">Member 5% (≥150rb)</option>
+            <option value="happy">Happy Hour 10%</option>
+            <option value="none">Tanpa Diskon</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-hr"></div>
+
+      <!-- QR Code Section -->
+      <div class="qr-section">
+        <div class="qr-section-title">QR Code Menu Digital</div>
+        <div class="qr-layout">
+          <div class="qr-box" id="qrBox">
+            <div id="qrCode"></div>
+          </div>
+          <div class="qr-info">
+            <div class="field-label" style="margin-bottom:6px;">URL Website / Menu</div>
+            <input class="qr-url-input" type="url" id="qrUrlInput"
+              placeholder="https://menu.jawacafe.com"
+              oninput="onQrUrlChange()" />
+            <div class="qr-hint">
+              QR ini bisa ditempel di meja agar tamu bisa scan dan langsung membuka menu digital. 
+              Masukkan URL website atau Google Form pesanan Anda.
+            </div>
+            <div class="qr-actions">
+              <button class="qr-btn-dl" onclick="downloadQR()">⬇️ Download QR</button>
+              <button class="qr-btn-copy" onclick="copyQRUrl()">📋 Salin URL</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-btns">
+        <button class="mbtn ghost" onclick="closeSettings()">Batal</button>
+        <button class="mbtn primary" onclick="saveSettings()">💾 Simpan Pengaturan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ CUSTOMER MODAL ══════ -->
+<div class="overlay" id="customerOverlay">
+  <div class="modal" id="customerModal">
+    <div class="modal-p">
+      <div class="modal-title">👤 Data Pemesan</div>
+      <div class="modal-sub">Isi detail tamu / pemesan untuk struk</div>
+      <div class="settings-grid full">
+        <div class="field-group">
+          <label class="field-label">Nama Pemesan</label>
+          <input class="field-input" type="text" id="custName" placeholder="Contoh: Budi Santoso" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Nomor HP / WhatsApp</label>
+          <input class="field-input" type="tel" id="custPhone" placeholder="0812-xxxx-xxxx" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Email (opsional)</label>
+          <input class="field-input" type="email" id="custEmail" placeholder="nama@email.com" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Jenis Pelayanan</label>
+          <select class="field-select" id="custType">
+            <option value="Dine In">🍽️ Dine In (Makan di Tempat)</option>
+            <option value="Take Away">🛍️ Take Away (Bawa Pulang)</option>
+            <option value="Delivery">🛵 Delivery (Antar ke Alamat)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-btns">
+        <button class="mbtn ghost" onclick="closeCustomer()">Batal</button>
+        <button class="mbtn primary" onclick="saveCustomer()">✅ Simpan Data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PAYMENT MODAL ══════ -->
+<div class="overlay" id="payOverlay">
+  <div class="modal" id="payModal">
+    <div class="modal-p">
+      <div class="modal-title">💳 Proses Pembayaran</div>
+      <div class="modal-sub" id="payModalSub">—</div>
+      <div class="receipt" id="receiptEl"></div>
+      <div id="paySection">
+        <label class="pay-lbl">Uang Diterima (Rp)</label>
+        <input class="pay-field" type="number" id="payInput" placeholder="0" oninput="calcChange()"/>
+        <div id="changeBox" style="display:none"></div>
+        <div id="errBox" style="display:none"></div>
+        <div class="modal-btns">
+          <button class="mbtn ghost" onclick="closePay()">Batal</button>
+          <button class="mbtn primary" id="confirmBtn" onclick="confirmPay()">Konfirmasi ✦</button>
+        </div>
+      </div>
+      <div id="successSection" style="display:none">
+        <div class="success-sec">
+          <span class="success-icon">✅</span>
+          <div class="success-title">Berhasil!</div>
+          <div class="success-change" id="successChange"></div>
+        </div>
+        <div class="modal-btns">
+          <button class="mbtn ghost" onclick="finishOrder()">Tutup</button>
+          <button class="mbtn success" onclick="finishOrder()">☕ Pesanan Baru</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════ -->
+<script>
+/* ── DATA ── */
+const MENU = [
+  {id:1,  cat:'Kopi',      name:'Americano',         desc:'Double espresso, air panas pilihan',               price:32000, emoji:'☕', tag:'best'},
+  {id:2,  cat:'Kopi',      name:'Cappuccino',         desc:'Espresso, foam susu mikro lembut',                price:38000, emoji:'🫧', tag:'best'},
+  {id:3,  cat:'Kopi',      name:'Caffe Latte',        desc:'Espresso ristretto, susu full-cream',             price:40000, emoji:'🥛', tag:null},
+  {id:4,  cat:'Kopi',      name:'Cold Brew',          desc:'Seduh lambat 18 jam, disajikan dingin',           price:45000, emoji:'🧊', tag:'best'},
+  {id:5,  cat:'Kopi',      name:'Espresso Shot',      desc:'Single origin Toraja, intensitas tinggi',         price:25000, emoji:'⚡', tag:null},
+  {id:6,  cat:'Kopi',      name:'Flat White',         desc:'Ristretto + microfoam velvet texture',            price:42000, emoji:'☕', tag:'new'},
+  {id:7,  cat:'Kopi',      name:'Piccolo Latte',      desc:'Mini latte 90ml, rasa pekat seimbang',            price:35000, emoji:'🫗', tag:'new'},
+  {id:8,  cat:'Kopi',      name:'Dirty Matcha',       desc:'Matcha Japanese + espresso shot',                 price:48000, emoji:'🍃', tag:'hot'},
+  {id:9,  cat:'Non-Kopi',  name:'Matcha Latte',       desc:'Matcha ceremonial grade, susu oat premium',       price:45000, emoji:'🍵', tag:'best'},
+  {id:10, cat:'Non-Kopi',  name:'Coklat Belgia',      desc:'70% dark chocolate, foam kayu manis',             price:42000, emoji:'🍫', tag:null},
+  {id:11, cat:'Non-Kopi',  name:'Strawberry Milk',    desc:'Susu segar, puree stroberi asli',                 price:38000, emoji:'🍓', tag:'new'},
+  {id:12, cat:'Non-Kopi',  name:'Teh Tarik',          desc:'Teh hitam premium, tarik tradisional',            price:28000, emoji:'🍊', tag:null},
+  {id:13, cat:'Non-Kopi',  name:'Lemon Ginger Fizz',  desc:'Lemon segar, jahe, soda artisanal',               price:35000, emoji:'🍋', tag:'hot'},
+  {id:14, cat:'Non-Kopi',  name:'Blue Pea Lemonade',  desc:'Butterfly pea flower, lemon, soda',               price:40000, emoji:'💙', tag:'new'},
+  {id:15, cat:'Non-Kopi',  name:'Avocado Smoothie',   desc:'Alpukat pilihan, susu almond, madu',              price:45000, emoji:'🥑', tag:null},
+  {id:16, cat:'Makanan',   name:'Croissant Almond',   desc:'Butter croissant, krim almond, almond slice',     price:45000, emoji:'🥐', tag:'best'},
+  {id:17, cat:'Makanan',   name:'Chicken Sandwich',   desc:'Ciabatta panggang, ayam truffle, selada',         price:58000, emoji:'🥪', tag:'best'},
+  {id:18, cat:'Makanan',   name:'Belgian Waffle',     desc:'Waffle klasik, buah segar, whipped cream',        price:55000, emoji:'🧇', tag:null},
+  {id:19, cat:'Makanan',   name:'French Toast',       desc:'Roti brioche, sirup maple, berry mix',            price:52000, emoji:'🍞', tag:null},
+  {id:20, cat:'Makanan',   name:'Eggs Benedict',      desc:'Telur poach, hollandaise, smoked beef',           price:75000, emoji:'🍳', tag:'hot'},
+  {id:21, cat:'Makanan',   name:'Avocado Toast',      desc:'Sourdough, alpukat, feta, telur setengah matang', price:62000, emoji:'🫒', tag:'best'},
+  {id:22, cat:'Makanan',   name:'Pasta Aglio Olio',   desc:'Spaghetti, bawang putih, chili flakes',           price:68000, emoji:'🍝', tag:null},
+  {id:23, cat:'Makanan',   name:'Pancake Stack',      desc:'3 lapis, sirup maple premium, butter',            price:50000, emoji:'🥞', tag:null},
+  {id:24, cat:'Dessert',   name:'Tiramisu',           desc:'Mascarpone, espresso, ladyfinger, kakao',         price:48000, emoji:'🍮', tag:'best'},
+  {id:25, cat:'Dessert',   name:'Cheesecake NY',      desc:'New York style, graham cracker, berry sauce',     price:52000, emoji:'🍰', tag:'hot'},
+  {id:26, cat:'Dessert',   name:'Brownies Walnut',    desc:'Dark chocolate fudge, walnut panggang',           price:35000, emoji:'🍫', tag:null},
+  {id:27, cat:'Dessert',   name:'Crème Brûlée',       desc:'Vanilla Tahitian, karamel bakar tableside',       price:58000, emoji:'🍯', tag:'new'},
+  {id:28, cat:'Dessert',   name:'Lava Cake',          desc:'Coklat leleh panas, vanilla ice cream',           price:55000, emoji:'🎂', tag:'hot'},
+  {id:29, cat:'Dessert',   name:'Pisang Goreng Keju', desc:'Pisang Raja crispy, keju mozarella leleh',        price:28000, emoji:'🍌', tag:null},
+  {id:30, cat:'Dessert',   name:'Donat Glazed',       desc:'Glazed original, coklat, matcha pilihan',         price:22000, emoji:'🍩', tag:null},
+  {id:31, cat:'Paket',     name:'Pagi Sempurna',      desc:'Latte + Croissant + Telur Orak-arik',             price:88000, emoji:'🌅', tag:'best'},
+  {id:32, cat:'Paket',     name:'Kopi & Kue',         desc:'Americano/Latte + Pastry pilihan',                price:58000, emoji:'☕', tag:null},
+  {id:33, cat:'Paket',     name:'Duo Coffee',         desc:'2 minuman kopi pilihan bebas',                    price:65000, emoji:'👥', tag:'hot'},
+  {id:34, cat:'Paket',     name:'High Tea Set',       desc:'Teh premium + Finger sandwich + Scone',           price:95000, emoji:'🫖', tag:'new'},
+];
+
+const CATS = [
+  {id:'Semua',    icon:'✦'},
+  {id:'Kopi',     icon:'☕'},
+  {id:'Non-Kopi', icon:'🍵'},
+  {id:'Makanan',  icon:'🍽️'},
+  {id:'Dessert',  icon:'🍰'},
+  {id:'Paket',    icon:'🎁'},
+];
+
+const TAX = 0.11;
+
+/* ── SESSION STATE ── */
+let session = {
+  kasir:    'Adit',
+  table:    '01',
+  restoran: 'Jawa Café',
+  alamat:   'Jl. Merdeka No. 12, Jakarta Pusat',
+  shift:    'Pagi (07.00–14.00)',
+  diskon:   'member',
+  qrUrl:    window.location.href,
+};
+
+let customer = {
+  name:  '',
+  phone: '',
+  email: '',
+  type:  'Dine In',
+};
+
+let orderNotes = '';
+let activeTab  = 'Semua';
+let searchQ    = '';
+let cart       = {};
+let orderNum   = 1000 + Math.floor(Math.random()*900);
+let sheetOpen  = false;
+let qrInstance = null;
+
+/* ── FORMAT ── */
+const rp = n => 'Rp\u202f' + Math.round(n).toLocaleString('id-ID');
+
+/* ── CLOCK ── */
+function tick() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const short = now.toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'});
+  const el = document.getElementById('cartTimeD');
+  if (el) el.textContent = short;
+}
+setInterval(tick, 1000); tick();
+
+/* ── CANVAS BG ── */
+(function() {
+  const cv = document.getElementById('bg');
+  const cx = cv.getContext('2d');
+  let W, H;
+
+  function resize() { W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; }
+  window.addEventListener('resize', resize); resize();
+
+  class Particle {
+    constructor() { this.init(); }
+    init() {
+      this.x  = Math.random() * W;
+      this.y  = H + 20;
+      this.r  = 1.5 + Math.random() * 3.5;
+      this.vy = -(0.12 + Math.random() * 0.3);
+      this.vx = (Math.random() - 0.5) * 0.2;
+      this.a  = 0; this.ma = 0.04 + Math.random() * 0.1;
+      this.life = 0; this.ml = 220 + Math.random() * 300;
+      this.phase = Math.random() * Math.PI * 2;
+      this.wob = Math.random() * 0.025;
+    }
+    step() {
+      this.life++;
+      this.y += this.vy; this.x += this.vx + Math.sin(this.phase + this.life*this.wob)*0.3;
+      this.a = this.ma * Math.sin((this.life/this.ml)*Math.PI);
+      if (this.life >= this.ml) this.init();
+    }
+    draw() {
+      cx.beginPath(); cx.arc(this.x,this.y,this.r,0,Math.PI*2);
+      cx.fillStyle = `rgba(212,160,86,${this.a})`; cx.fill();
+    }
+  }
+
+  class Ring {
+    constructor() { this.init(); }
+    init() {
+      this.x = 60+Math.random()*(W-120); this.y = 60+Math.random()*(H-120);
+      this.r = 30+Math.random()*100; this.life = 0; this.ml = 350+Math.random()*400;
+      this.grow = 0.12+Math.random()*0.2; this.a = 0;
+    }
+    step() {
+      this.life++; this.r += this.grow;
+      this.a = 0.035 * Math.sin((this.life/this.ml)*Math.PI);
+      if (this.life >= this.ml) this.init();
+    }
+    draw() {
+      cx.beginPath(); cx.arc(this.x,this.y,this.r,0,Math.PI*2);
+      cx.strokeStyle = `rgba(192,120,40,${this.a})`; cx.lineWidth = 1; cx.stroke();
+    }
+  }
+
+  class Blob {
+    constructor(x,y,sz) {
+      this.x=this.px=this.tx=x; this.y=this.py=this.ty=y; this.sz=sz; this.t=0; this.d=180+Math.random()*350;
+    }
+    step() {
+      this.t++;
+      if (this.t >= this.d) {
+        this.px=this.tx; this.py=this.ty;
+        this.tx=W*.08+Math.random()*W*.84; this.ty=H*.08+Math.random()*H*.84;
+        this.t=0; this.d=180+Math.random()*350;
+      }
+      const p=this.t/this.d; const e=p<.5?2*p*p:-1+(4-2*p)*p;
+      this.x=this.px+(this.tx-this.px)*e; this.y=this.py+(this.ty-this.py)*e;
+    }
+    draw() {
+      const g=cx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.sz);
+      g.addColorStop(0,'rgba(192,120,40,0.038)'); g.addColorStop(1,'rgba(192,120,40,0)');
+      cx.beginPath(); cx.arc(this.x,this.y,this.sz,0,Math.PI*2);
+      cx.fillStyle=g; cx.fill();
+    }
+  }
+
+  const parts = Array.from({length:60},()=>new Particle());
+  const rings  = Array.from({length:9},()=>{const r=new Ring(); r.life=Math.random()*r.ml; return r;});
+  const blobs  = [new Blob(W*.2,H*.3,300), new Blob(W*.75,H*.6,240), new Blob(W*.5,H*.1,210)];
+
+  function frame() {
+    cx.clearRect(0,0,W,H);
+    const bg=cx.createRadialGradient(W/2,H*.35,0,W/2,H*.35,Math.max(W,H)*.95);
+    bg.addColorStop(0,'#170B07'); bg.addColorStop(1,'#090402');
+    cx.fillStyle=bg; cx.fillRect(0,0,W,H);
+    blobs.forEach(b=>{b.step();b.draw()});
+    rings.forEach(r=>{r.step();r.draw()});
+    parts.forEach(p=>{p.step();p.draw()});
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+/* ── CARD HOVER GLOW ── */
+document.addEventListener('mousemove', e => {
+  const c = e.target.closest('.menu-card');
+  if (!c) return;
+  const r = c.getBoundingClientRect();
+  c.style.setProperty('--hx', ((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
+  c.style.setProperty('--hy', ((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
+});
+
+/* ── TABS ── */
+function renderTabs() {
+  document.getElementById('tabsWrap').innerHTML = CATS.map(cat => {
+    const n = cat.id==='Semua' ? MENU.length : MENU.filter(m=>m.cat===cat.id).length;
+    return `<button class="tab-btn${cat.id===activeTab?' active':''}" onclick="selTab('${cat.id}')">
+      ${cat.icon} ${cat.id} <span class="tab-cnt">${n}</span>
+    </button>`;
+  }).join('');
+}
+function selTab(id) { activeTab=id; searchQ=''; document.getElementById('searchInput').value=''; renderTabs(); renderMenu(); }
+
+/* ── SEARCH ── */
+function onSearch() { searchQ=document.getElementById('searchInput').value.toLowerCase().trim(); activeTab='Semua'; renderTabs(); renderMenu(); }
+
+/* ── MENU ── */
+function renderMenu() {
+  let list = MENU;
+  if (activeTab!=='Semua') list = list.filter(m=>m.cat===activeTab);
+  if (searchQ) list = list.filter(m=>m.name.toLowerCase().includes(searchQ)||m.desc.toLowerCase().includes(searchQ));
+  document.getElementById('menuCount').textContent = list.length + ' item';
+  if (!list.length) {
+    document.getElementById('menuGrid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:50px 0;">
+      <div style="font-size:36px;margin-bottom:10px;">🔍</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;color:#6B5E8A;">Menu tidak ditemukan</div>
+    </div>`;
+    return;
+  }
+  document.getElementById('menuGrid').innerHTML = list.map((m,i)=>{
+    const qty=cart[m.id]||0;
+    const tag=m.tag?`<span class="card-stock ${m.tag}">${{best:'★ Terlaris',new:'✦ Baru',hot:'🔥 Trending'}[m.tag]}</span>`:'';
+    return `<div class="menu-card" data-id="${m.id}" ${qty?`data-qty="${qty}"`:''}
+      onclick="addToCart(${m.id})" style="animation-delay:${i*.033}s">
+      ${tag}
+      <div class="card-qty-badge">${qty?`×${qty} dipesan`:''}</div>
+      <div class="card-emoji-wrap"><div class="card-emoji-bg"></div><span class="card-emoji">${m.emoji}</span></div>
+      <div class="card-cat">${m.cat}</div>
+      <div class="card-name">${m.name}</div>
+      <div class="card-desc">${m.desc}</div>
+      <div class="card-footer">
+        <div><div class="card-price">${rp(m.price)}</div><span class="card-price-sub">/ porsi</span></div>
+        <button class="add-btn" onclick="event.stopPropagation();addToCart(${m.id})">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── CART ── */
+function addToCart(id) {
+  cart[id] = (cart[id]||0) + 1;
+  renderCart(); renderMenu();
+  const m = MENU.find(x=>x.id===id);
+  showToast(`${m.emoji} ${m.name} ditambahkan`);
+  document.querySelectorAll('.cart-badge').forEach(e=>{e.classList.remove('pop');void e.offsetWidth;e.classList.add('pop');});
+}
+
+function changeQty(id, d) {
+  cart[id] = (cart[id]||0) + d;
+  if (cart[id]<=0) delete cart[id];
+  renderCart(); renderMenu();
+}
+
+function clearCart() {
+  if (!Object.keys(cart).length) return;
+  if (!confirm('Kosongkan semua pesanan?')) return;
+  cart = {}; renderCart(); renderMenu();
+  if (sheetOpen) toggleSheet();
+}
+
+function calcDiscount(subtotal) {
+  const mode = session.diskon;
+  if (mode==='member' && subtotal>=150000) return -Math.round(subtotal*.05);
+  if (mode==='happy') return -Math.round(subtotal*.10);
+  return 0;
+}
+
+function calcTotals() {
+  const sub  = Object.entries(cart).reduce((s,[id,q])=> s + MENU.find(m=>m.id==id).price*q, 0);
+  const tax  = Math.round(sub*TAX);
+  const disc = calcDiscount(sub);
+  return {sub, tax, disc, total: sub+tax+disc};
+}
+
+function renderCart() {
+  const ids     = Object.keys(cart);
+  const totQty  = ids.reduce((s,id)=>s+cart[id],0);
+  const oStr    = `#${String(orderNum).padStart(4,'0')}`;
+  ['D','M'].forEach(s=>{
+    const b=document.getElementById('cartBadge'+s); if(b) b.textContent=totQty+' item';
+    const n=document.getElementById('orderNum'+s);  if(n) n.textContent='Order '+oStr;
+  });
+  document.getElementById('fabCnt').textContent = totQty;
+
+  const emptyHTML=`<div class="empty-state">
+    <div class="empty-cup">☕<div class="empty-steam"><div class="steam-puff"></div><div class="steam-puff"></div><div class="steam-puff"></div></div></div>
+    <div class="empty-title">Belum ada pesanan</div>
+    <div class="empty-sub">Pilih menu untuk mulai transaksi</div>
+  </div>`;
+
+  if (!ids.length) {
+    document.getElementById('cartBodyD').innerHTML = emptyHTML;
+    document.getElementById('cartBodyM').innerHTML = emptyHTML;
+    ['D','M'].forEach(s=>{
+      document.getElementById('sub'+s).textContent='Rp 0';
+      document.getElementById('tax'+s).textContent='Rp 0';
+      document.getElementById('total'+s).textContent='Rp 0';
+      document.getElementById('payBtn'+s).disabled=true;
+      document.getElementById('clearBtn'+s).disabled=true;
+    });
+    if(document.getElementById('discD')) document.getElementById('discD').textContent='Rp 0';
+    return;
+  }
+
+  const html = ids.map(id=>{
+    const m=MENU.find(x=>x.id==id); const q=cart[id];
+    return `<div class="cart-item">
+      <div class="item-thumb">${m.emoji}</div>
+      <div class="item-det"><div class="item-name">${m.name}</div><div class="item-up">${rp(m.price)} / pcs</div></div>
+      <div class="item-qc">
+        <button class="qb" onclick="changeQty(${id},-1)">−</button>
+        <span class="qn">${q}</span>
+        <button class="qb" onclick="changeQty(${id},1)">+</button>
+      </div>
+      <span class="item-tot">${rp(m.price*q)}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('cartBodyD').innerHTML = html;
+  document.getElementById('cartBodyM').innerHTML = html;
+
+  const {sub,tax,disc,total} = calcTotals();
+  ['D','M'].forEach(s=>{
+    document.getElementById('sub'+s).textContent=rp(sub);
+    document.getElementById('tax'+s).textContent=rp(tax);
+    document.getElementById('total'+s).textContent=rp(total);
+    document.getElementById('payBtn'+s).disabled=false;
+    document.getElementById('clearBtn'+s).disabled=false;
+  });
+  if(document.getElementById('discD'))
+    document.getElementById('discD').textContent = disc<0?`− ${rp(Math.abs(disc))}`:'Rp 0';
+}
+
+/* ── NOTES SYNC ── */
+function syncNotes() { orderNotes=document.getElementById('orderNotes').value; document.getElementById('orderNotesM').value=orderNotes; }
+function syncNotesM(){ orderNotes=document.getElementById('orderNotesM').value; document.getElementById('orderNotes').value=orderNotes; }
+
+/* ── SESSION UI ── */
+function applySession() {
+  document.getElementById('pillTable').textContent   = session.table;
+  document.getElementById('pillKasir').textContent   = session.kasir;
+  document.getElementById('kasirChip').textContent   = '☕ ' + session.kasir;
+  document.getElementById('stripKasir').textContent  = session.kasir;
+  document.getElementById('stripTable').textContent  = '#' + session.table;
+  document.getElementById('stripKasirM').textContent = session.kasir;
+  document.getElementById('stripTableM').textContent = '#' + session.table;
+  applyCustomerUI();
+}
+
+function applyCustomerUI() {
+  const name = customer.name || 'Tamu';
+  document.getElementById('pillCustomer').textContent   = name;
+  document.getElementById('cbCustomerName').textContent = customer.name || 'Belum diisi — klik untuk tambahkan';
+  document.getElementById('cbPhone').textContent        = customer.phone || '—';
+  document.getElementById('stripCustomer').textContent  = customer.name ? `${customer.name} · ${customer.type}` : '—';
+}
+
+/* ── SETTINGS MODAL ── */
+function openSettings() {
+  document.getElementById('setKasir').value    = session.kasir;
+  document.getElementById('setTable').value    = session.table;
+  document.getElementById('setRestoran').value = session.restoran;
+  document.getElementById('setAlamat').value   = session.alamat;
+  document.getElementById('setShift').value    = session.shift;
+  document.getElementById('setDiskon').value   = session.diskon;
+  document.getElementById('qrUrlInput').value  = session.qrUrl;
+  document.getElementById('settingsOverlay').classList.add('open');
+  setTimeout(()=>generateQR(session.qrUrl), 100);
+}
+
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); }
+
+function saveSettings() {
+  session.kasir    = document.getElementById('setKasir').value.trim()    || 'Kasir';
+  session.table    = document.getElementById('setTable').value.trim()    || '01';
+  session.restoran = document.getElementById('setRestoran').value.trim() || 'Jawa Café';
+  session.alamat   = document.getElementById('setAlamat').value.trim()   || '';
+  session.shift    = document.getElementById('setShift').value;
+  session.diskon   = document.getElementById('setDiskon').value;
+  session.qrUrl    = document.getElementById('qrUrlInput').value.trim() || window.location.href;
+  applySession(); renderCart();
+  closeSettings();
+  showToast('✅ Pengaturan sesi tersimpan');
+}
+
+/* ── QR CODE ── */
+function generateQR(url) {
+  const box = document.getElementById('qrCode');
+  box.innerHTML = '';
+  if (!url) return;
+  try {
+    qrInstance = new QRCode(box, {
+      text: url,
+      width: 98, height: 98,
+      colorDark: '#1B0E08',
+      colorLight: '#FFFFFF',
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+  } catch(e) { box.innerHTML = '<div style="font-size:11px;color:#999;text-align:center;padding:10px;">QR tidak dapat<br>di-generate</div>'; }
+}
+
+function onQrUrlChange() {
+  const url = document.getElementById('qrUrlInput').value.trim();
+  session.qrUrl = url;
+  clearTimeout(onQrUrlChange._t);
+  onQrUrlChange._t = setTimeout(()=>generateQR(url), 600);
+}
+
+function downloadQR() {
+  const box = document.getElementById('qrCode');
+  const canvas = box.querySelector('canvas');
+  if (!canvas) { showToast('⚠️ QR belum ter-generate'); return; }
+  const a = document.createElement('a');
+  a.download = 'qr-menu-jawacafe.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+  showToast('⬇️ QR Code diunduh');
+}
+
+function copyQRUrl() {
+  const url = document.getElementById('qrUrlInput').value.trim();
+  if (!url) { showToast('⚠️ URL kosong'); return; }
+  navigator.clipboard.writeText(url).then(()=>showToast('📋 URL disalin ke clipboard')).catch(()=>showToast('⚠️ Gagal menyalin'));
+}
+
+/* ── CUSTOMER MODAL ── */
+function openCustomer() {
+  document.getElementById('custName').value  = customer.name;
+  document.getElementById('custPhone').value = customer.phone;
+  document.getElementById('custEmail').value = customer.email;
+  document.getElementById('custType').value  = customer.type;
+  document.getElementById('customerOverlay').classList.add('open');
+}
+function closeCustomer() { document.getElementById('customerOverlay').classList.remove('open'); }
+function saveCustomer() {
+  customer.name  = document.getElementById('custName').value.trim();
+  customer.phone = document.getElementById('custPhone').value.trim();
+  customer.email = document.getElementById('custEmail').value.trim();
+  customer.type  = document.getElementById('custType').value;
+  applyCustomerUI();
+  closeCustomer();
+  showToast('👤 Data pemesan disimpan');
+}
+
+/* ── PAYMENT ── */
+function buildReceipt(sub, tax, disc, total) {
+  const now = new Date();
+  const tgl = now.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+  const jam = now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+
+  const rows = Object.entries(cart).map(([id,q])=>{
+    const m=MENU.find(x=>x.id==id);
+    return `<div class="r-row"><span>${m.emoji} ${m.name} ×${q}</span><span>${rp(m.price*q)}</span></div>`;
+  }).join('');
+
+  const notesHtml = orderNotes ? `<div class="r-row" style="font-style:italic;color:rgba(107,94,138,.7);"><span>📝 ${orderNotes}</span></div>` : '';
+  const discHtml  = disc<0 ? `<div class="r-row" style="color:#166534;"><span>Diskon (${session.diskon==='happy'?'10%':'5%'})</span><span>−${rp(Math.abs(disc))}</span></div>` : '';
+  const custHtml  = customer.name ? `<div class="r-customer">
+    <div>Pemesan: <b>${customer.name}</b></div>
+    ${customer.phone?`<div>HP: ${customer.phone}</div>`:''}
+    <div>Tipe: ${customer.type}</div>
+  </div>` : '';
+
+  return `
+    <div class="r-logo">
+      <div class="r-name">✦ ${session.restoran} ✦</div>
+      <div class="r-addr">${session.alamat}</div>
+      <div class="r-addr" style="margin-top:3px;">Order #${String(orderNum).padStart(4,'0')} · Meja ${session.table} · ${session.kasir}</div>
+      <div class="r-addr">${tgl} · ${jam} · ${session.shift}</div>
+    </div>
+    ${rows}
+    ${notesHtml}
+    <hr class="r-div"/>
+    <div class="r-row"><span>Subtotal</span><span>${rp(sub)}</span></div>
+    <div class="r-row"><span>Pajak (11%)</span><span>${rp(tax)}</span></div>
+    ${discHtml}
+    <hr class="r-div"/>
+    <div class="r-total"><span>TOTAL</span><span>${rp(total)}</span></div>
+    ${custHtml}
+    <div class="r-thanks">Terima kasih telah mengunjungi ${session.restoran} 🙏<br><span style="font-size:10px;opacity:.5;">Simpan struk ini sebagai bukti pembayaran</span></div>`;
+}
+
+function openPay() {
+  if (sheetOpen) toggleSheet();
+  const {sub,tax,disc,total} = calcTotals();
+  const qty = Object.values(cart).reduce((a,b)=>a+b,0);
+  document.getElementById('payModalSub').textContent =
+    `Order #${String(orderNum).padStart(4,'0')} · ${qty} item · ${rp(total)} · ${customer.name||'Tamu'}`;
+  document.getElementById('receiptEl').innerHTML = buildReceipt(sub,tax,disc,total);
+  document.getElementById('payInput').value='';
+  document.getElementById('changeBox').style.display='none';
+  document.getElementById('errBox').style.display='none';
+  document.getElementById('paySection').style.display='block';
+  document.getElementById('successSection').style.display='none';
+  document.getElementById('payOverlay').classList.add('open');
+}
+function closePay() { document.getElementById('payOverlay').classList.remove('open'); }
+
+function calcChange() {
+  const {total} = calcTotals();
+  const paid = parseInt(document.getElementById('payInput').value)||0;
+  const chg  = paid - total;
+  const cBox = document.getElementById('changeBox');
+  const eBox = document.getElementById('errBox');
+  const btn  = document.getElementById('confirmBtn');
+  if (!paid) { cBox.style.display='none'; eBox.style.display='none'; btn.disabled=false; return; }
+  if (chg<0) {
+    cBox.style.display='none'; eBox.style.display='block'; btn.disabled=true;
+    eBox.className='error-msg'; eBox.innerHTML=`❌ Kurang ${rp(Math.abs(chg))}`;
+  } else {
+    eBox.style.display='none'; cBox.style.display='flex'; btn.disabled=false;
+    cBox.className='kembalian-box';
+    cBox.innerHTML=`<span class="kb-lbl">💵 Kembalian</span><span class="kb-amt">${rp(chg)}</span>`;
+  }
+}
+
+function confirmPay() {
+  const {total} = calcTotals();
+  const v = document.getElementById('payInput').value;
+  const paid = parseInt(v)||0;
+  if (!v||!paid) {
+    document.getElementById('errBox').style.display='block';
+    document.getElementById('errBox').className='error-msg';
+    document.getElementById('errBox').innerHTML='⚠️ Masukkan jumlah uang yang diterima';
+    return;
+  }
+  if (paid<total) return;
+  const chg = paid-total;
+  document.getElementById('paySection').style.display='none';
+  document.getElementById('successSection').style.display='block';
+  document.getElementById('successChange').textContent =
+    chg>0 ? `Kembalian: ${rp(chg)}` : 'Pembayaran tepat — terima kasih!';
+}
+
+function finishOrder() {
+  closePay(); cart={}; orderNum++; orderNotes='';
+  document.getElementById('orderNotes').value='';
+  document.getElementById('orderNotesM').value='';
+  customer = {name:'',phone:'',email:'',type:'Dine In'};
+  applyCustomerUI(); renderCart(); renderMenu();
+}
+
+/* ── MOBILE SHEET ── */
+function toggleSheet() {
+  sheetOpen=!sheetOpen;
+  document.getElementById('mobileSheet').classList.toggle('open',sheetOpen);
+  document.getElementById('sheetOvl').classList.toggle('open',sheetOpen);
+  document.body.style.overflow=sheetOpen?'hidden':'';
+}
+
+/* ── CLOSE ON BG CLICK ── */
+['settingsOverlay','customerOverlay','payOverlay'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{
+    if (e.target===document.getElementById(id))
+      document.getElementById(id).classList.remove('open');
+  });
+});
+
+/* ── TOAST ── */
+let _t;
+function showToast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(_t); _t=setTimeout(()=>el.classList.remove('show'),2300);
+}
+
+/* ── INIT ── */
+applySession();
+renderTabs();
+renderMenu();
+renderCart();
+</script>
+</body>
+</html>
